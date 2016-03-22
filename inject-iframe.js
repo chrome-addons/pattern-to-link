@@ -187,13 +187,13 @@ var setup = getSavedConfigSetupParsed();
 
 function onload() {
     addStyleCssNode('\
-        .opacit-on-hover:hover { opacity: 1 !important; }\
+        .goto-links-container.opacit-on-hover:hover { opacity: 1 !important; }\
         \
-        * {\
+        .goto-links-container * {\
             font-family: monospace !important; \
             font-size: 12px; \
         }\
-        textarea {\
+        .goto-links-container textarea {\
             font-size: 12px; \
         }\
         ')
@@ -208,7 +208,7 @@ function onload() {
     gotoLinksContainer.style.borderRadius = '5px';
     gotoLinksContainer.style.border = 'solid 1px #aaa';
     gotoLinksContainer.style.opacity = '0.3';
-    gotoLinksContainer.className = 'opacit-on-hover';
+    gotoLinksContainer.className = 'goto-links-container opacit-on-hover';
 
     if (setup) {    
         var allLinksList = [];
