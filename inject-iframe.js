@@ -137,26 +137,27 @@ function addEditConfigHtml(addToContainer) {
     addToContainer.appendChild(aboutInfoContainer);    
 
     var configSetupTextarea = document.getElementById('pattern2link-config-setup');
-    var configSetupString = getSavedConfigSetupString();
-    if (configSetupString) {
-        configSetupTextarea.value = configSetupString;
-    } else {
-        configSetupTextarea.value = JSON.stringify(DEFAULT_CONFIG_SETUP, null, '  ');
-    }
+    getSavedConfigSetupString(function(configSetupString){
+        if (configSetupString) {
+            configSetupTextarea.value = configSetupString;
+        } else {
+            configSetupTextarea.value = JSON.stringify(DEFAULT_CONFIG_SETUP, null, '  ');
+        }
 
-    var saveBtn = document.getElementById('save-pattern2link-config-setup-btn');
-    saveBtn.onclick = function() {
-        var configSetup = configSetupTextarea.value;
-        saveOption(CONFIG_SETUP_KEY, configSetup);
-        
-        editOptionsBtn.style.display = 'inherit';
-        optionsContainer.style.display = 'none';
-    }
-    var cancelBtn = document.getElementById('cancel-pattern2link-config-setup-btn');
-    cancelBtn.onclick = function() {
-        editOptionsBtn.style.display = 'inherit';
-        optionsContainer.style.display = 'none';
-    }
+        var saveBtn = document.getElementById('save-pattern2link-config-setup-btn');
+        saveBtn.onclick = function() {
+            var configSetup = configSetupTextarea.value;
+            saveOption(CONFIG_SETUP_KEY, configSetup);
+            
+            editOptionsBtn.style.display = 'inherit';
+            optionsContainer.style.display = 'none';
+        }
+        var cancelBtn = document.getElementById('cancel-pattern2link-config-setup-btn');
+        cancelBtn.onclick = function() {
+            editOptionsBtn.style.display = 'inherit';
+            optionsContainer.style.display = 'none';
+        }
+    });
 }
 
 function searchDetailsAppliesToThisPage(searchDetails) {
@@ -183,9 +184,37 @@ function anySearchCriteriaAppliesToThisPage(setup) {
     return false;
 }
 
-var setup = getSavedConfigSetupParsed();
+function onload(setup) {
+    if (!setup) {
+        return;
+    }
 
-function onload() {
+    var allLinksList = [];
+
+    for (var i = 0; i < setup.searches.length; i++) {
+        if (!searchDetailsAppliesToThisPage(setup.searches[i])) {
+            continue;
+        }
+
+        var topNodes = [];
+        if (setup.searches[i].limitToContainersQuery) {
+            topNodes = document.querySelectorAll(setup.searches[i].limitToContainersQuery);
+        } else {
+            topNodes = document.body.children;
+        }
+
+        for (var i = 0; i < topNodes.length; i++) {
+            var containerChildren = topNodes[i].children;
+            for (var j = 0; j < containerChildren.length; j++) {
+                findMatches(setup.searches[i].matchDetails, containerChildren[j], allLinksList);
+            }
+        }
+    }
+
+    if (allLinksList.length == 0) {
+        return;
+    }
+    
     addStyleCssNode('\
         .goto-links-container.opacit-on-hover:hover { opacity: 1 !important; }\
         \
@@ -210,43 +239,19 @@ function onload() {
     gotoLinksContainer.style.opacity = '0.3';
     gotoLinksContainer.className = 'goto-links-container opacit-on-hover';
 
-    if (setup) {    
-        var allLinksList = [];
-
-        for (var i = 0; i < setup.searches.length; i++) {
-            if (!searchDetailsAppliesToThisPage(setup.searches[i])) {
-                continue;
-            }
-
-            var topNodes = [];
-            if (setup.searches[i].limitToContainersQuery) {
-                topNodes = document.querySelectorAll(setup.searches[i].limitToContainersQuery);
-            } else {
-                topNodes = document.body.children;
-            }
-
-            for (var i = 0; i < topNodes.length; i++) {
-                var containerChildren = topNodes[i].children;
-                for (var j = 0; j < containerChildren.length; j++) {
-                    findMatches(setup.searches[i].matchDetails, containerChildren[j], allLinksList);
-                }
-            }
-        }
-
-        for (var i = 0; i < allLinksList.length; i++) {
-            var linkElem = allLinksList[i];
-            
-            var gotoLink = document.createElement('a');
-            gotoLink.href = 'javascript:void(0);';//gotoLink.href = '#'+linkElem.id;
-            attachOnClickScrollTo(gotoLink, linkElem, allLinksList);
-            gotoLink.innerText = linkElem.innerText;
-            gotoLink.style.display = 'block';
-            gotoLinksContainer.appendChild(gotoLink);
-        }
+    for (var i = 0; i < allLinksList.length; i++) {
+        var linkElem = allLinksList[i];
+        
+        var gotoLink = document.createElement('a');
+        gotoLink.href = 'javascript:void(0);';//gotoLink.href = '#'+linkElem.id;
+        attachOnClickScrollTo(gotoLink, linkElem, allLinksList);
+        gotoLink.innerText = linkElem.innerText;
+        gotoLink.style.display = 'block';
+        gotoLinksContainer.appendChild(gotoLink);
     }
 
     document.body.appendChild(gotoLinksContainer);
     addEditConfigHtml(gotoLinksContainer);
 }
 
-onload();
+getSavedConfigSetupParsed(onload);

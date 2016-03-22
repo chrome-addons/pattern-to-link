@@ -3,12 +3,16 @@
 
     "name": "Pattern 2 Link",
     "description": "Find patterns in a page and create links for them as well as an overview container to jump to them",
-    "version": "0.0.0.1",
+    "version": "0.0.2",
 
     "content_scripts": [ {
         "matches": [ "<all_urls>" ] ,
         "js": [ "shared.js", "inject-iframe.js" ]
     } ],
 
-    "options_page": "options.html"
+    "options_page": "options.html",
+
+    "permissions": [
+        "storage"
+    ]
 }

@@ -19,26 +19,33 @@ var DEFAULT_CONFIG_SETUP = {
 var NEVER_TIMEOUT = -1;
 
 function saveOption(key, value) {
-    localStorage[key] = value;
-    console.log('Saved key "' + key + '" with value: ' + value);
+    var obj = {};
+    obj[key] = value;
+    chrome.storage.sync.set(obj, function () {
+        console.log("Saved key '" + key + "' with value: " + value);
+    });
 }
 
-function loadOption(key) {
-    return localStorage[key];
+function loadOption(key, callback) {
+    chrome.storage.sync.get(key, function (valueContainer) { 
+        callback(valueContainer[key]);
+    });
 }
 
-function getSavedConfigSetupString() {
-    return loadOption(CONFIG_SETUP_KEY);
+function getSavedConfigSetupString(callback) {
+    return loadOption(CONFIG_SETUP_KEY, callback);
 }
 
-function getSavedConfigSetupParsed() {
-    var setupString = getSavedConfigSetupString();
-    if (!setupString)  {
-        return null;
-    }
-    var configSetup = JSON.parse(setupString);
-    convertRegexPatterns(configSetup);
-    return configSetup;
+function getSavedConfigSetupParsed(callback) {
+    getSavedConfigSetupString(function(setupString) {
+        if (!setupString)  {
+            callback(null);
+            return;
+        }
+        var configSetup = JSON.parse(setupString);
+        convertRegexPatterns(configSetup);
+        callback(configSetup);
+    });
 }
 
 function convertRegexPatterns(configSetup) {
